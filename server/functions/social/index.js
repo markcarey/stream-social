@@ -15,7 +15,6 @@ const fetch = require('node-fetch');
 const nftContract = `0xDb46d1Dc155634FbC732f92E853b10B288AD5a1d`; // lens Profiles on Polygon
 const lensAPI = `https://api.lens.dev/`;
 const tokenbound = require("@tokenbound/sdk-ethers");
-console.log(tokenbound);
 
 var provider = new ethers.providers.JsonRpcProvider({"url": process.env.API_URL_GOERLI});
 var providerPolygon = new ethers.providers.JsonRpcProvider({"url": process.env.API_URL_POLYGON});
@@ -28,97 +27,185 @@ async function getLensProfile(user) {
             'Content-Type': 'application/json'
         };
         var res = await fetch(lensAPI, { 
-        method: 'POST', 
-        headers: headers,
-        body: JSON.stringify({
-            query: `
-            query Profile {
-                profile(request: { handle: "${handle}" }) {
-                    id
-                    name
-                    bio
-                    attributes {
-                    displayType
-                    traitType
-                    key
-                    value
-                    }
-                    followNftAddress
-                    metadata
-                    isDefault
-                    picture {
-                    ... on NftImage {
-                        contractAddress
-                        tokenId
-                        uri
-                        verified
-                    }
-                    ... on MediaSet {
-                        original {
-                        url
-                        mimeType
-                        }
-                    }
-                    __typename
-                    }
-                    handle
-                    coverPicture {
-                    ... on NftImage {
-                        contractAddress
-                        tokenId
-                        uri
-                        verified
-                    }
-                    ... on MediaSet {
-                        original {
-                        url
-                        mimeType
-                        }
-                    }
-                    __typename
-                    }
-                    ownedBy
-                    dispatcher {
-                    address
-                    canUseRelay
-                    }
-                    stats {
-                    totalFollowers
-                    totalFollowing
-                    totalPosts
-                    totalComments
-                    totalMirrors
-                    totalPublications
-                    totalCollects
-                    }
-                    followModule {
-                    ... on FeeFollowModuleSettings {
-                        type
-                        amount {
-                        asset {
-                            symbol
-                            name
-                            decimals
-                            address
-                        }
+            method: 'POST', 
+            headers: headers,
+            body: JSON.stringify({
+                query: `
+                query Profile {
+                    profile(request: { handle: "${handle}" }) {
+                        id
+                        name
+                        bio
+                        attributes {
+                        displayType
+                        traitType
+                        key
                         value
                         }
-                        recipient
+                        followNftAddress
+                        metadata
+                        isDefault
+                        picture {
+                        ... on NftImage {
+                            contractAddress
+                            tokenId
+                            uri
+                            verified
+                        }
+                        ... on MediaSet {
+                            original {
+                            url
+                            mimeType
+                            }
+                        }
+                        __typename
+                        }
+                        handle
+                        coverPicture {
+                        ... on NftImage {
+                            contractAddress
+                            tokenId
+                            uri
+                            verified
+                        }
+                        ... on MediaSet {
+                            original {
+                            url
+                            mimeType
+                            }
+                        }
+                        __typename
+                        }
+                        ownedBy
+                        dispatcher {
+                        address
+                        canUseRelay
+                        }
+                        stats {
+                        totalFollowers
+                        totalFollowing
+                        totalPosts
+                        totalComments
+                        totalMirrors
+                        totalPublications
+                        totalCollects
+                        }
+                        followModule {
+                        ... on FeeFollowModuleSettings {
+                            type
+                            amount {
+                            asset {
+                                symbol
+                                name
+                                decimals
+                                address
+                            }
+                            value
+                            }
+                            recipient
+                        }
+                        ... on ProfileFollowModuleSettings {
+                            type
+                        }
+                        ... on RevertFollowModuleSettings {
+                            type
+                        }
+                        }
                     }
-                    ... on ProfileFollowModuleSettings {
-                        type
-                    }
-                    ... on RevertFollowModuleSettings {
-                        type
-                    }
-                    }
-                }
-                }                  
-                `
-        })
+                    }                  
+                    `
+            })
         });
         var profileResult = await res.json();        
         resolve(profileResult.data.profile);
+    });
+}
+
+function getWidgetJSON(from, to) {
+    const widget = {
+        "productDetails": {
+            "name": `Stream to ${to.profile.name} (${to.profile.handle})`,
+            "description": to.profile.bio ? to.profile.bio : '',
+            "imageURI": to.profile.picture.uri,
+            "image": null
+        },
+        "paymentDetails": {
+            "defaultReceiverAddress": "",
+            "paymentOptions": [
+                {
+                    "receiverAddress": to.tba,
+                    "superToken": {
+                        "address": "0x8ae68021f6170e5a766be613cea0d75236ecca9a"
+                    },
+                    "chainId": 5,
+                    "flowRate": {
+                        "amountEther": "1",
+                        "period": "day"
+                    }
+                }
+            ]
+        },
+        "layout": "page",
+        "theme": {
+            "typography": {
+                "fontFamily": "'Noto Sans', 'sans-serif'"
+            },
+            "palette": {
+                "mode": "light",
+                "primary": {
+                    "main": "#1DB227"
+                },
+                "secondary": {
+                    "main": "#fff"
+                }
+            },
+            "shape": {
+                "borderRadius": 20
+            },
+            "components": {
+                "MuiStepIcon": {
+                    "styleOverrides": {
+                        "text": {
+                            "fill": "#fff"
+                        }
+                    }
+                },
+                "MuiOutlinedInput": {
+                    "styleOverrides": {
+                        "root": {
+                            "borderRadius": 10
+                        }
+                    }
+                },
+                "MuiButton": {
+                    "styleOverrides": {
+                        "root": {
+                            "borderRadius": 10
+                        }
+                    }
+                }
+            }
+        }
+    };
+    return widget;
+}
+
+async function pinJson(widget) {
+    return new Promise(async (resolve, reject) => {
+        const pinataUri = `https://api.pinata.cloud/pinning/pinJSONToIPFS`;
+        const headers = {
+            'Content-Type': 'application/json',
+            'pinata_api_key': process.env.PINATA_API_KEY,
+            'pinata_secret_api_key': process.env.PINATA_SECRET_API_KEY
+        };
+        var res = await fetch(pinataUri, { 
+            method: 'POST', 
+            headers: headers,
+            body: JSON.stringify(widget)
+        });
+        var pinResult = await res.json(); 
+        console.log(pinResult);
+        resolve(pinResult.IpfsHash);
     });
 }
 
@@ -167,7 +254,11 @@ api.get("/api/widget", async function (req, res) {
 
     to.tba = await tokenbound.getAccount(nftContract, to.profile.id, providerPolygon);
 
-    return res.json({"from": from, "to": to});
+    const widget = getWidgetJSON(from, to);
+
+    const cid = await pinJson(widget);
+
+    return res.json({"from": from, "to": to, "widgetJSON": widget, "widgetUri": `https://checkout.superfluid.finance/${cid}`});
 });
 
 module.exports.api = api;
