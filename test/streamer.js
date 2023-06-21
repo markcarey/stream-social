@@ -24,15 +24,15 @@ const streamer = new ethers.Contract(addr.streamer, streamerJSON.abi, signer);
 
 describe("Smile Distribution", function () {
 
-    it("Should drop 100 SMILE to _msgSender()", async function () {
+    it("Should drop 100 SMILE", async function () {
         var to = PUBLIC_KEY;
         await expect(streamer.drop(to, "100000000000000000000"))
             .to.emit(smile, 'Transfer');
     });
 
-    it("Should stream SMILE at 100 flowRate", async function () {
+    it("Should stream SMILE at 420 flowRate", async function () {
         var to = "0x5dbCaC6c76bd32497B652D1afFf959B3f83B53e1"; // "Jerry"
-        await expect(streamer.stream(to, 100, 0))
+        await expect(streamer.stream(to, 420, 0))
             .to.emit(smile, 'AgreementUpdated');
     });
 
