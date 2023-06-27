@@ -15,6 +15,7 @@ const fetch = require('node-fetch');
 const nftContract = `0xDb46d1Dc155634FbC732f92E853b10B288AD5a1d`; // lens Profiles on Polygon
 const lensAPI = `https://api.lens.dev/`;
 const tokenbound = require("@tokenbound/sdk-ethers");
+const amt = "1000000000000000000000000"; // 1,000,000 SMILE
 
 var provider = new ethers.providers.JsonRpcProvider({"url": process.env.API_URL_GOERLI});
 var providerPolygon = new ethers.providers.JsonRpcProvider({"url": process.env.API_URL_POLYGON});
@@ -135,7 +136,7 @@ function getWidgetJSON(from, to) {
                 {
                     "receiverAddress": to.tba,
                     "superToken": {
-                        "address": "0x8ae68021f6170e5a766be613cea0d75236ecca9a"
+                        "address": process.env.SMILE_ADDR
                     },
                     "chainId": 5,
                     "flowRate": {
@@ -190,6 +191,17 @@ function getWidgetJSON(from, to) {
     return widget;
 }
 
+async function dropSmiles(to) {
+    return new Promise(async (resolve, reject) => {
+        // TODO: check if social profile has already received the drop
+        const signer = new ethers.Wallet(process.env.SOCIAL_PRIV, provider);
+        const streamABI = ["function drop(address to, uint256 amount)"];
+        const streamer = new ethers.Contract(process.env.SMILE_STREAMER, streamABI, signer);
+        await streamer.drop(to, amt);
+        resolve(1);
+    });
+}
+
 async function pinJson(widget) {
     return new Promise(async (resolve, reject) => {
         const pinataUri = `https://api.pinata.cloud/pinning/pinJSONToIPFS`;
@@ -242,13 +254,21 @@ api.get("/api", async function (req, res) {
     return res.json({"what": "tokenbound.social", "why": "tba"});
 });
 
-api.get("/api/widget", async function (req, res) {
+api.post("/api/widget", async function (req, res) {
     var from = {};
     var to = {};
     from.handle = req.q.from;
     to.handle = req.q.to;
     
-    from.profile = await getLensProfile(from);
+    from.profile = {};
+    if (req.q.from) {
+        from.profile = await getLensProfile(from);
+    }
+
+    if ("ownedBy" in from.profile) {
+        // TODO: check if requested token is SMILE
+        await dropSmiles(from.profile.ownedBy);
+    }
 
     to.profile = await getLensProfile(to);
 

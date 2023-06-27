@@ -1,1 +1,113 @@
-TBA
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tokenbound Social</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+      background-color: #f6f6f6;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #ffffff;
+      border-radius: 12px;
+      padding-left: 200px;
+      padding-right: 200px;
+      padding-top: 100px;
+      padding-bottom: 100px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      width: 400px;
+    }
+
+    .logo {
+      width: 150px;
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      margin-bottom: 20px;
+      padding: 16px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d3d3d3;
+      border-radius: 8px;
+      font-size: 16px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    button {
+      padding: 14px;
+      background-color: rgb(29, 178, 39);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+        background-color: rgb(20, 124, 27);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="https://tokenbound.social/images/smile.svg" alt="TokenBound Social" class="logo" id="logo">
+    <img src="https://tokenbound.social/images/progress.gif" alt="doing stuff" class="logo" id="progress" style="display: none;">
+    <form id="stream-form">
+      <input id="from" type="text" placeholder="From: (ie. markcarey.lens)">
+      <input id="to" type="text" placeholder="To: (ie. superfluid.lens)">
+    </form>
+    <button id="stream" type="submit">Stream</button>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.ethers.io/lib/ethers-5.1.umd.min.js" type="text/javascript"></script>  
+  <script>
+    $( document ).ready(function() {
+      const api = `https://api.tokenbound.social/api/widget`;
+  
+      $("#stream").click(async function(){
+        var data = {
+          "from": $("#from").val(),
+          "to": $("#to").val()
+        }
+        $("#stream-form").hide();
+        $("button").hide();
+        $("#logo").hide();
+        $("#progress").show();
+        const res = await fetch(api, { 
+          method: 'POST', 
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(data)
+        }); // fetch
+        var result = await res.json();
+        const widgetUrl = result.widgetUri;
+        window.location = widgetUrl;
+        return false;
+      }); // #stream click
+
+    }); // docready
+  </script>
+
+</body>
+</html>
