@@ -143,6 +143,28 @@ function getWidgetJSON(from, to) {
                         "amountEther": "1",
                         "period": "day"
                     }
+                },
+                {
+                    "receiverAddress": to.tba,
+                    "superToken": {
+                        "address": "0x8ae68021f6170e5a766be613cea0d75236ecca9a"
+                    },
+                    "chainId": 5,
+                    "flowRate": {
+                        "amountEther": "1",
+                        "period": "day"
+                    }
+                },
+                {
+                    "receiverAddress": to.tba,
+                    "superToken": {
+                        "address": "0x5943f705abb6834cad767e6e4bb258bc48d9c947"
+                    },
+                    "chainId": 5,
+                    "flowRate": {
+                        "amountEther": "0.01",
+                        "period": "day"
+                    }
                 }
             ]
         },
